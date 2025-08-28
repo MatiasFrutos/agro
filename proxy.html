@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Datos del Técnico — Agronomía Inteligente SRL</title>
+
+  <!-- jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8fafc;
+      --ink:#0f172a; --mut:#475569; --line:#e2e8f0; --accent:#3b82f6;
+      --ok:#10b981; --warn:#3b82f6; --err:#ef4444;
+      --radius:18px; --pad:18px; --shadow:0 10px 24px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--ink)}
+
+    /* HEADER */
+    header{
+      background:linear-gradient(135deg,#233143,#16202f);
+      padding:20px 12px; border-bottom:1px solid #0b1624; color:#e5eaf0;
+    }
+    header .inner{
+      max-width:1100px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between; gap:16px
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:64px; height:64px; border-radius:16px;
+      background:#0f172a; display:grid; place-items:center;
+      overflow:hidden;
+    }
+    .logo img{width:100%; height:100%; object-fit:contain; display:block}
+    .titles .title{font-weight:800; font-size:18px}
+    .titles .subtitle{font-size:12px; opacity:.9}
+    .chip{background:#0f172a; border:1px solid #1f2937; color:#e5e7eb; padding:8px 10px; border-radius:999px; font-size:12px}
+
+    /* LAYOUT */
+    main{max-width:1100px; margin:12px auto; padding:0 10px 20px}
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; box-shadow:var(--shadow)}
+
+    /* FORM */
+    .section-title{font-weight:800; margin:12px 0 12px; font-size:20px}
+    label{display:block; font-weight:650; font-size:14px; margin:8px 0 6px; color:#0f172a}
+    input,select,textarea{
+      width:100%; border:1px solid #cbd5e1; background:#fff; color:#0f172a;
+      border-radius:12px; padding:12px 14px; font-size:15px; outline:none; transition:border .15s, box-shadow .15s;
+    }
+    input::placeholder, textarea::placeholder{color:#94a3b8}
+    input:focus,select:focus,textarea:focus{border-color:#93c5fd; box-shadow:0 0 0 3px rgba(147,197,253,.45)}
+    textarea{min-height:100px; resize:vertical}
+    .req{color:var(--err); margin-left:4px; font-weight:900}
+    .note{font-size:12px; color:#2563eb; margin-top:4px}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+
+    /* CHECKS */
+    .checks{display:grid; gap:12px}
+    .check{
+      display:flex; gap:12px; align-items:flex-start;
+      border:1px solid var(--line); background:var(--panel2); padding:12px; border-radius:12px;
+    }
+    .check input[type="checkbox"]{
+      width:22px; height:22px; margin-top:2px;
+      accent-color: var(--accent);
+      border-radius:6px;
+    }
+    .check strong{font-weight:750}
+
+    /* DÍAS */
+    .days{display:grid; grid-template-columns: repeat(7, minmax(90px,1fr)); gap:8px}
+    @media (max-width:900px){ .days{grid-template-columns: repeat(3, 1fr)} }
+    @media (max-width:600px){ .days{grid-template-columns: repeat(2, 1fr)} }
+
+    /* FIRMA */
+    .sig-box{
+      background:#f1f5f9; border:2px dashed #94a3b8; border-radius:12px; height:180px; position:relative
+    }
+    canvas#firma{width:100%; height:100%; display:block; border-radius:10px}
+    .small{font-size:.92rem; color:#64748b}
+
+    /* BOTONES */
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .btn{
+      border:0; background:#0f172a; color:#fff; padding:11px 14px;
+      border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.12)
+    }
+    .btn:focus-visible{outline:3px solid rgba(59,130,246,.6)}
+    .btn.ok{background:var(--ok)}
+    .btn.warn{background:var(--warn)}
+
+    @media (max-width:600px){
+      header .inner{flex-direction:column; align-items:flex-start; gap:8px}
+      .logo{ width:48px; height:48px; }
+      .titles .title{font-size:16px}
+      .titles .subtitle{font-size:11px}
+      .card{padding:12px}
+      .actions{flex-direction:column; align-items:stretch}
+      .actions .btn{width:100%}
+      .sig-box{height:240px}
+    }
+
+    dialog[open]{display:block}
+  </style>
+</head>
+<body>
+  <!-- ========== ENCABEZADO ========== -->
+  <header>
+    <div class="inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="logo.png" alt="Logo Agronomía Inteligente SRL" loading="eager" decoding="async">
+        </div>
+        <div class="titles">
+          <div class="title">Agronomía Inteligente SRL</div>
+          <div class="subtitle">Datos del Técnico Instalador</div>
+        </div>
+      </div>
+      <span class="chip">Factura A requerida</span>
+    </div>
+  </header>
+
+  <!-- ========== CONTENIDO ========== -->
+  <main>
+    <section class="card">
+      <form id="formTec" novalidate>
+        <!-- 1) DATOS PERSONALES PARA CONTACTO -->
+        <div class="section-title">1) Datos personales para contacto</div>
+        <div class="grid">
+          <div><label>Nombre y Apellido <span class="req">*</span></label><input id="nombre" required placeholder="Juan Pérez"/></div>
+          <div><label>DNI / CUIT <span class="req">*</span></label><input id="dni" required placeholder="20-12345678-3"/></div>
+          <div><label>Correo electrónico <span class="req">*</span></label><input id="email" type="email" required placeholder="juan@mail.com"/></div>
+          <div><label>Teléfono <span class="req">*</span></label><input id="tel" required placeholder="+54 9 11 1234-5678"/></div>
+          <div><label>Ciudad / Provincia <span class="req">*</span></label><input id="ciudad" required placeholder="CABA / Buenos Aires"/></div>
+          <div><label>CBU / Alias para pago <span class="req">*</span></label><input id="cbu" required placeholder="CBU o Alias"/></div>
+          <div>
+            <label>Banco donde se paga <span class="req">*</span></label>
+            <input id="bancoPago" required placeholder="Ej.: Banco Nación"/>
+            <div class="note">Usaremos este dato para identificar el banco emisor del pago.</div>
+          </div>
+          <div>
+            <label>Modalidad de facturación <span class="req">*</span></label>
+            <select id="fact" required>
+              <option value="">Seleccionar…</option>
+              <option>Monotributista</option>
+              <option>Autónomo</option>
+              <option>Responsable Inscripto</option>
+            </select>
+            <div class="note">Siempre solicitaremos <strong>FACTURA A</strong>.</div>
+          </div>
+        </div>
+
+        <!-- 2) MODALIDAD DE TRABAJO (OBLIGATORIO) -->
+        <div class="section-title">2) Modalidad de trabajo <span class="req">*</span></div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="modVendor"/><span><strong>Vendor / Barra distribuidor</strong></span></label>
+          <label class="check"><input type="checkbox" id="modInstalador"/><span><strong>Instalador</strong></span></label>
+          <label class="check"><input type="checkbox" id="modOtros"/><span><strong>Otros</strong> — especifique</span></label>
+          <input id="modOtrosDetalle" placeholder="Detalle de otros" style="display:none"/>
+        </div>
+
+        <!-- 3) ZONA DE COBERTURA -->
+        <div class="section-title">3) Zona de cobertura</div>
+        <div class="grid">
+          <div><label>Radio de cobertura (km) <span class="req">*</span></label><input id="radioKm" type="number" step="0.1" min="0" required placeholder="50"/></div>
+          <div><label>Observaciones <span class="req">*</span></label><input id="obs" required placeholder="Notas adicionales, disponibilidad, etc."/></div>
+        </div>
+
+        <!-- 4) DISPONIBILIDAD (OBLIGATORIA) -->
+        <div class="section-title" id="seccion-disponibilidad">4) Disponibilidad (días y franja horaria) <span class="req">*</span></div>
+        <div class="days">
+          <label class="check"><input type="checkbox" id="d_lun"/><span><strong>Lun</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_mar"/><span><strong>Mar</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_mie"/><span><strong>Mié</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_jue"/><span><strong>Jue</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_vie"/><span><strong>Vie</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_sab"/><span><strong>Sáb</strong></span></label>
+          <label class="check"><input type="checkbox" id="d_dom"/><span><strong>Dom</strong></span></label>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <div><label>Desde (hora) <span class="req">*</span></label><input id="horaDesde" type="time" required/></div>
+          <div><label>Hasta (hora) <span class="req">*</span></label><input id="horaHasta" type="time" required/></div>
+        </div>
+
+        <!-- 5) FIRMA -->
+        <div class="section-title">5) Firma del técnico</div>
+        <div class="sig-box"><canvas id="firma"></canvas></div>
+        <div class="actions"><button type="button" class="btn" id="limpiarFirma">Borrar firma</button></div>
+
+        <div class="grid" style="margin-top:14px">
+          <div><label>Lugar <span class="req">*</span></label><input id="lugar" required placeholder="Ciudad"/></div>
+          <div><label>Fecha <span class="req">*</span></label><input id="fecha" type="date" required/></div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ok" id="btnPDF">Generar PDF</button>
+          <button type="button" class="btn warn" id="btnJira">Enviar datos personales</button>
+          <button type="button" class="btn" id="btnLimpiar">Limpiar todo</button>
+        </div>
+
+        <p class="small" style="margin-top:8px">Los campos con * son obligatorios. El envío adjunta el PDF firmado.</p>
+      </form>
+    </section>
+
+    <footer>© <span id="anio"></span> Agronomía Inteligente SRL</footer>
+  </main>
+
+  <script>
+    const pad = n => String(n).padStart(2,'0');
+    const today = new Date();
+    document.getElementById('anio').textContent = today.getFullYear();
+    const fechaEl = document.getElementById('fecha');
+    function setTodayIfEmpty(){ if (fechaEl && !fechaEl.value) fechaEl.value = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`; }
+    setTodayIfEmpty();
+
+    // Mostrar "Otros" si corresponde (y marcar requerido cuando esté activo)
+    const chkOtros = document.getElementById('modOtros');
+    const otrosDetalle = document.getElementById('modOtrosDetalle');
+    function toggleOtros(){
+      const show = chkOtros.checked;
+      otrosDetalle.style.display = show ? 'block' : 'none';
+      otrosDetalle.required = show; // obligatorio si se elige "Otros"
+    }
+    chkOtros.addEventListener('change', toggleOtros);
+    toggleOtros(); // estado inicial
+
+    // Firma
+    const canvas = document.getElementById('firma');
+    const ctx = canvas.getContext('2d');
+    function drawWatermark(){ if (!isCanvasBlank(canvas)) return; ctx.save(); ctx.globalAlpha = .15; ctx.font = '24px system-ui'; ctx.fillStyle = '#64748b'; ctx.fillText('— Firma —', 20, canvas.height - 20); ctx.restore(); }
+    function baseSetup(){ ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a'; }
+    function isCanvasBlank(c){ const blank = document.createElement('canvas'); blank.width = c.width; blank.height = c.height; return c.toDataURL() === blank.toDataURL(); }
+    function resizeCanvas({preserve=false}={}){ const hasData = preserve && !isCanvasBlank(canvas); const dataURL = hasData ? canvas.toDataURL('image/png') : null; const r = canvas.parentElement.getBoundingClientRect(); const newW = Math.floor(r.width - 8), newH = Math.floor(r.height - 8); if (canvas.width === newW && canvas.height === newH) return; canvas.width = newW; canvas.height = newH; baseSetup(); if (dataURL){ const img = new Image(); img.onload = ()=> { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = dataURL; } else { drawWatermark(); } }
+    let resizeTimer = null; function debouncedResize(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=> resizeCanvas({preserve:true}), 150); }
+    window.addEventListener('resize', debouncedResize); resizeCanvas({preserve:false});
+    let drawing=false, last=null;
+    function startDraw(x,y){ drawing=true; last={x,y}; }
+    function moveDraw(x,y){ if(!drawing) return; ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(x,y); ctx.stroke(); last={x,y}; }
+    function endDraw(){ drawing=false; last=null; }
+    canvas.addEventListener('mousedown', e=> startDraw(e.offsetX,e.offsetY));
+    canvas.addEventListener('mousemove', e=> moveDraw(e.offsetX,e.offsetY));
+    window.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('touchstart', e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect(); const t=e.touches[0]; startDraw(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
+    canvas.addEventListener('touchmove', e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect(); const t=e.touches[0]; moveDraw(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
+    canvas.addEventListener('touchend', e=>{ e.preventDefault(); endDraw(); }, {passive:false});
+    document.getElementById('limpiarFirma').addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); drawWatermark(); });
+
+    // ====== Valores ======
+    function valores(){
+      const v = id => (document.getElementById(id).value || '').trim();
+      const mods = [];
+      if (document.getElementById('modVendor').checked) mods.push('Vendor/Barra distribuidor');
+      if (document.getElementById('modInstalador').checked) mods.push('Instalador');
+      if (document.getElementById('modOtros').checked){ const d = v('modOtrosDetalle'); mods.push(d ? ('Otros: ' + d) : 'Otros'); }
+
+      const dias = [];
+      if (document.getElementById('d_lun').checked) dias.push('Lun');
+      if (document.getElementById('d_mar').checked) dias.push('Mar');
+      if (document.getElementById('d_mie').checked) dias.push('Mié');
+      if (document.getElementById('d_jue').checked) dias.push('Jue');
+      if (document.getElementById('d_vie').checked) dias.push('Vie');
+      if (document.getElementById('d_sab').checked) dias.push('Sáb');
+      if (document.getElementById('d_dom').checked) dias.push('Dom');
+
+      return {
+        nombre:v('nombre'), dni:v('dni'), email:v('email'), tel:v('tel'),
+        ciudad:v('ciudad'),
+        cbu:v('cbu'), bancoPago:v('bancoPago'), fact:v('fact'),
+        modalidades:mods.join(' | '),
+        radioKm:v('radioKm'), obs:v('obs'),
+        diasDisponibles:dias.join(' | '),
+        horaDesde:v('horaDesde'), horaHasta:v('horaHasta'),
+        lugar:v('lugar'), fecha:v('fecha')
+      };
+    }
+
+    // ====== VALIDACIÓN (todo obligatorio) ======
+    function validar(){
+      const form = document.getElementById('formTec');
+
+      // HTML5 'required'
+      if (!form.checkValidity()){
+        form.reportValidity();
+        return false;
+      }
+
+      // Al menos una modalidad
+      const algunModo = ['modVendor','modInstalador','modOtros'].some(id => document.getElementById(id).checked);
+      if (!algunModo){
+        alert('Seleccioná al menos una opción en "Modalidad de trabajo".');
+        return false;
+      }
+
+      // Detalle "Otros" si corresponde
+      if (document.getElementById('modOtros').checked){
+        const d = (document.getElementById('modOtrosDetalle').value || '').trim();
+        if (!d){
+          alert('Indicá el detalle para "Otros" en Modalidad de trabajo.');
+          document.getElementById('modOtrosDetalle').focus();
+          return false;
+        }
+      }
+
+      // Al menos un día disponible
+      const algunDia = ['d_lun','d_mar','d_mie','d_jue','d_vie','d_sab','d_dom'].some(id => document.getElementById(id).checked);
+      if (!algunDia){
+        alert('Seleccioná al menos un día en "Disponibilidad".');
+        return false;
+      }
+
+      // Franja horaria completa y válida
+      const hd = document.getElementById('horaDesde').value;
+      const hh = document.getElementById('horaHasta').value;
+      if (!hd || !hh){
+        alert('Completá la franja horaria: Desde y Hasta.');
+        return false;
+      }
+      const toMin = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+      if (toMin(hh) <= toMin(hd)){
+        alert('La hora "Hasta" debe ser mayor que "Desde".');
+        return false;
+      }
+
+      // Firma obligatoria
+      if (isCanvasBlank(canvas)){
+        alert('Por favor, firmá en el recuadro.');
+        return false;
+      }
+
+      return true;
+    }
+
+    /* ===== Logo para PDF ===== */
+    let LOGO_DATAURL = null;
+    async function fetchLogoAsDataURL(){
+      try{
+        const img = document.querySelector('.logo img'); if (!img) return null;
+        const url = img.getAttribute('src'); if (!url) return null;
+        const res = await fetch(url, {cache:'no-store'});
+        if (res.ok){
+          const blob = await res.blob();
+          const dataURL = await new Promise((resolve, reject)=>{
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result);
+            fr.onerror = reject;
+            fr.readAsDataURL(blob);
+          });
+          return String(dataURL);
+        }
+      }catch(e){}
+      try{
+        const img = document.querySelector('.logo img');
+        if (!img || !img.complete || !img.naturalWidth) return null;
+        const c = document.createElement('canvas'); c.width = img.naturalWidth || 128; c.height = img.naturalHeight || 128;
+        const x = c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height);
+        return c.toDataURL('image/png');
+      }catch(e){ return null; }
+    }
+    (async function preloadLogoForPDF(){ LOGO_DATAURL = await fetchLogoAsDataURL(); })();
+
+    // ===== PDF =====
+    function generarPDFDatosBlob(){
+      const vals = valores();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit:'pt', format:'a4' });
+      const W = pdf.internal.pageSize.getWidth();
+      const H = pdf.internal.pageSize.getHeight();
+
+      // Encabezado
+      pdf.setFillColor(35,49,67); pdf.rect(0,0,W,64,'F');
+      pdf.setTextColor(255,255,255);
+      const LOGO_W = 36, LOGO_H = 36, LOGO_X = 40, LOGO_Y = 14;
+      let textX = 40;
+      if (LOGO_DATAURL){
+        try{ pdf.addImage(LOGO_DATAURL,'PNG',LOGO_X,LOGO_Y,LOGO_W,LOGO_H,undefined,'FAST'); textX = LOGO_X + LOGO_W + 12; }catch(e){}
+      }
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(16); pdf.text('Agronomía Inteligente SRL', textX, 40);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(11); pdf.text('Datos del Técnico Instalador', textX, 58);
+
+      // Tabla
+      const rows = [
+        ['Nombre y Apellido', vals.nombre],
+        ['DNI/CUIT', vals.dni],
+        ['Email', vals.email],
+        ['Teléfono', vals.tel],
+        ['Ciudad / Provincia', vals.ciudad],
+        ['CBU/Alias', vals.cbu],
+        ['Banco donde se paga', vals.bancoPago],
+        ['Modalidad de facturación', vals.fact + ' (Factura A)']
+      ];
+      if (pdf.autoTable){
+        pdf.autoTable({
+          startY:96, head:[['Dato','Valor']], body:rows, theme:'grid',
+          styles:{fontSize:10,cellPadding:6}, headStyles:{fillColor:[35,49,67], textColor:255}, columnStyles:{0:{cellWidth:190}}
+        });
+      }
+      let y = (pdf.lastAutoTable ? pdf.lastAutoTable.finalY : 220) + 12;
+
+      // Modalidad + Cobertura
+      pdf.setTextColor(35,49,67);
+      pdf.setFont('helvetica','bold'); pdf.text('Modalidad de trabajo', 40, y); y+=14;
+      pdf.setFont('helvetica','normal'); pdf.text(pdf.splitTextToSize(vals.modalidades || '—', W-80), 40, y); y += 18;
+
+      pdf.setFont('helvetica','bold'); pdf.text('Zona de cobertura', 40, y); y+=14;
+      pdf.setFont('helvetica','normal'); pdf.text(`Radio de cobertura: ${vals.radioKm} km`, 40, y); y += 18;
+
+      // Disponibilidad
+      pdf.setFont('helvetica','bold'); pdf.text('Disponibilidad', 40, y); y+=14;
+      pdf.setFont('helvetica','normal');
+      pdf.text(`Días: ${vals.diasDisponibles}`, 40, y); y+=14;
+      pdf.text(`Franja horaria: ${vals.horaDesde} a ${vals.horaHasta}`, 40, y); y += 18;
+
+      // Observaciones
+      pdf.setFont('helvetica','bold'); pdf.text('Observaciones', 40, y); y+=14;
+      pdf.setFont('helvetica','normal');
+      const o = pdf.splitTextToSize(vals.obs, W-80);
+      pdf.text(o, 40, y); y += o.length*14 + 6;
+
+      // Lugar/Fecha + Firma
+      pdf.text(`Lugar y fecha: ${vals.lugar}, ${vals.fecha}`, 40, y); y+=24;
+      const img=canvas.toDataURL('image/png'); const sigW=220, sigH=90;
+      if (y + sigH + 80 > H){ pdf.addPage(); y = 60; }
+      pdf.text('Firma del técnico', 40, y-8);
+      pdf.addImage(img,'PNG',40,y,sigW,sigH,undefined,'FAST');
+      pdf.setDrawColor(150); pdf.rect(40,y,sigW,sigH); y += sigH + 20;
+      pdf.setFont('helvetica','italic'); pdf.text(`${vals.nombre} — DNI/CUIT: ${vals.dni}`, 40, y);
+
+      const safeName = vals.nombre.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g,'').trim().replace(/\s+/g,'_');
+      const fileName = `Datos_Tecnico_${safeName}_${vals.fecha}.pdf`;
+      const blob = pdf.output('blob');
+      return { blob, fileName, vals };
+    }
+
+    // Descargar PDF
+    document.getElementById('btnPDF').addEventListener('click', ()=>{
+      if (!validar()) return;
+      const { blob, fileName } = generarPDFDatosBlob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // Envío a Jira vía PROXY
+    const PROXY_URL = 'https://jira-proxy-production.up.railway.app';
+    function toADF(paragraphs){ return { version:1, type:'doc', content: paragraphs.map(text => ({ type:'paragraph', content:[{type:'text', text}] })) }; }
+    async function enviarAJiraViaProxy({blob, fileName, vals}){
+      const lines = [
+        `Técnico: ${vals.nombre} — DNI/CUIT: ${vals.dni}`,
+        `Email: ${vals.email} | Tel: ${vals.tel}`,
+        `Ciudad/Provincia: ${vals.ciudad}`,
+        `CBU/Alias: ${vals.cbu} | Banco donde se paga: ${vals.bancoPago}`,
+        `Facturación: ${vals.fact} (Factura A)`,
+        `Modalidad de trabajo: ${vals.modalidades}`,
+        `Zona de cobertura: Radio ${vals.radioKm} km`,
+        `Días disponibles: ${vals.diasDisponibles}`,
+        `Franja horaria disponible: ${vals.horaDesde} a ${vals.horaHasta}`,
+        `Observaciones: ${vals.obs}`,
+        `Lugar/Fecha: ${vals.lugar} — ${vals.fecha}`,
+        '',
+        'Adjunto: Datos del técnico en PDF firmado.'
+      ];
+      const descriptionADF = toADF(lines);
+
+      // Blob -> base64
+      const pdfBase64 = await new Promise((resolve, reject)=>{
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result).split(',')[1]);
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+
+      const resp = await fetch(`${PROXY_URL}/api/contrato/json`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          summary:`Datos personales — ${vals.nombre}`,
+          labels:['tecnicos','datos'],
+          descriptionADF,
+          pdfBase64,
+          pdfFilename:fileName
+        })
+      });
+      if (!resp.ok){ const t = await resp.text(); throw new Error('Proxy error: ' + t); }
+      const data = await resp.json();
+      return data.key;
+    }
+    document.getElementById('btnJira').addEventListener('click', async ()=>{
+      try{
+        if (!validar()) return;
+        const pkg = generarPDFDatosBlob();
+        await enviarAJiraViaProxy(pkg);
+        alert('Datos personales enviados');
+      }catch(err){
+        console.error(err);
+        alert('Error al enviar: ' + err.message);
+      }
+    });
+
+    // Limpiar
+    function limpiarFormulario(){
+      const form = document.getElementById('formTec');
+      form.reset();
+      ['modVendor','modInstalador','modOtros','d_lun','d_mar','d_mie','d_jue','d_vie','d_sab','d_dom'].forEach(id=>{
+        const el = document.getElementById(id); if (el) el.checked = false;
+      });
+      document.getElementById('modOtrosDetalle').style.display='none';
+      setTodayIfEmpty();
+      ctx.clearRect(0,0,canvas.width,canvas.height); drawWatermark();
+    }
+  </script>
+</body>
+</html>
