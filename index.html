@@ -2,517 +2,664 @@
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Datos de Contacto — Agronomía Inteligente SRL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Agronomía Inteligente SRL — Datos personales</title>
 
-  <!-- jsPDF -->
+  <!-- Librerías para PDF (se usa al enviar a Jira) -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root{
-      --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8fafc;
-      --ink:#0f172a; --mut:#475569; --line:#e2e8f0; --accent:#3b82f6;
-      --ok:#10b981; --warn:#3b82f6; --err:#ef4444;
-      --radius:18px; --pad:18px; --shadow:0 10px 24px rgba(0,0,0,.08);
+      --bg:#f9fafb; --panel:#ffffff;
+      --ink:#111827; --mut:#6b7280;
+      --line:#111827; --line-soft:#e5e7eb;
+      --accent:#facc15; /* amarillo */
+      --accent-ink:#111827;
+      --radius:14px; --pad:16px; --shadow:0 1px 0 rgba(17,24,39,.06);
+      --input:#ffffff; --input-bd:#111827; --input-h:#fffef3;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--ink)}
+    *{ box-sizing: border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color:var(--ink);
+    }
+    .wrap{ max-width: 1100px; margin: 24px auto 40px; padding: 0 16px; }
+    header.h{ margin-bottom:16px; }
+    .brand{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .brand-logo{ height:44px; width:auto; object-fit:contain; }
+    .brand h1{ margin:0; font-size: clamp(22px, 3vw, 30px); line-height:1.1; }
+    .brand .sub{ margin:0; color:var(--mut); font-size: clamp(14px, 2vw, 16px); }
+    .bar-yellow{ height:3px; background: var(--accent); margin-top:10px; border-radius:2px; }
 
-    /* HEADER */
-    header{
-      background:linear-gradient(135deg,#233143,#16202f);
-      padding:20px 12px; border-bottom:1px solid #0b1624; color:#e5eaf0;
-    }
-    header .inner{
-      max-width:1100px; margin:0 auto;
-      display:flex; align-items:center; justify-content:space-between; gap:16px
-    }
-    .brand{display:flex; align-items:center; gap:12px}
-    .logo{
-      width:64px; height:64px; border-radius:16px;
-      background:#0f172a; display:grid; place-items:center;
-      overflow:hidden;
-    }
-    .logo img{width:100%; height:100%; object-fit:contain; display:block}
-    .titles .title{font-weight:800; font-size:18px}
-    .titles .subtitle{font-size:12px; opacity:.9}
-    .chip{background:#0f172a; border:1px solid #1f2937; color:#e5e7eb; padding:8px 10px; border-radius:999px; font-size:12px}
-
-    /* LAYOUT */
-    main{max-width:1100px; margin:12px auto; padding:0 10px 20px}
-    .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; box-shadow:var(--shadow)}
-
-    /* FORM */
-    .section-title{font-weight:800; margin:12px 0 12px; font-size:20px}
-    label{display:block; font-weight:650; font-size:14px; margin:8px 0 6px; color:#0f172a}
-    input,select,textarea{
-      width:100%; border:1px solid #cbd5e1; background:#fff; color:#0f172a;
-      border-radius:12px; padding:12px 14px; font-size:15px; outline:none; transition:border .15s, box-shadow .15s;
-    }
-    input::placeholder, textarea::placeholder{color:#94a3b8}
-    input:focus,select:focus,textarea:focus{border-color:#93c5fd; box-shadow:0 0 0 3px rgba(147,197,253,.45)}
-    textarea{min-height:100px; resize:vertical}
-    .req{color:var(--err); margin-left:4px; font-weight:900}
-    .note{font-size:12px; color:#2563eb; margin-top:4px}
-    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-
-    /* CHECKS */
-    .checks{display:grid; gap:12px}
-    .check{
-      display:flex; gap:12px; align-items:flex-start;
-      border:1px solid var(--line); background:var(--panel2); padding:12px; border-radius:12px;
-    }
-    .check input[type="checkbox"]{
-      width:22px; height:22px; margin-top:2px;
-      accent-color: var(--accent);
-      border-radius:6px;
-    }
-    .check strong{font-weight:750}
-
-    /* DÍAS */
-    .days{display:grid; grid-template-columns: repeat(7, minmax(90px,1fr)); gap:8px}
-    @media (max-width:900px){ .days{grid-template-columns: repeat(3, 1fr)} }
-    @media (max-width:600px){ .days{grid-template-columns: repeat(2, 1fr)} }
-
-    /* FIRMA */
-    .sig-box{
-      background:#f1f5f9; border:2px dashed #94a3b8; border-radius:12px; height:180px; position:relative
-    }
-    canvas#firma{width:100%; height:100%; display:block; border-radius:10px}
-    .small{font-size:.92rem; color:#64748b}
-
-    /* BOTONES */
-    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
-    .btn{
-      border:0; background:#0f172a; color:#fff; padding:11px 14px;
-      border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.12)
-    }
-    .btn:focus-visible{outline:3px solid rgba(59,130,246,.6)}
-    .btn.ok{background:var(--ok)}
-    .btn.warn{background:var(--warn)}
-
-    @media (max-width:600px){
-      header .inner{flex-direction:column; align-items:flex-start; gap:8px}
-      .logo{ width:48px; height:48px; }
-      .titles .title{font-size:16px}
-      .titles .subtitle{font-size:11px}
-      .card{padding:12px}
-      .actions{flex-direction:column; align-items:stretch}
-      .actions .btn{width:100%}
-      .sig-box{height:240px}
+    .notice{
+      margin: 6px 0 12px;
+      background:#fffef3; border:1px solid var(--accent); color:var(--ink);
+      border-radius:10px; padding:10px 12px; font-size:.95rem;
     }
 
-    dialog[open]{display:block}
+    .panel{
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-top:4px solid var(--accent); /* línea amarilla */
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--pad);
+    }
+
+    form.grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .section-title{
+      grid-column: 1 / -1;
+      font-weight:700; font-size: 1.05rem;
+      border-bottom:1px solid var(--line);
+      padding-bottom:6px; margin-top:6px;
+    }
+    .field{
+      grid-column: span 12;
+      display:flex; flex-direction:column; gap:6px;
+      background: var(--panel);
+      border:1px solid var(--line);
+      border-radius: 10px; padding: 10px;
+    }
+    .field.half{ grid-column: span 6; }
+    .field.third{ grid-column: span 4; }
+    .field.two{ grid-column: span 2; }
+    .field label{ font-size: .94rem; }
+    .req::after{ content:" *"; color:#b91c1c; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="time"], input[type="date"], select, textarea{
+      background: var(--input);
+      border:1px solid var(--input-bd);
+      color:var(--ink);
+      padding: 11px 12px;
+      border-radius: 8px;
+      outline: none;
+      transition: .15s border, .15s background;
+      width:100%;
+    }
+    textarea{ min-height: 84px; resize: vertical; }
+    input:focus, select:focus, textarea:focus{ border-color: var(--accent); background: var(--input-h); }
+    .help{ color:var(--mut); font-size: .85rem; }
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .chips .chip{
+      border:1px solid var(--line);
+      padding:6px 10px; border-radius:999px; cursor:pointer;
+      background:#fff;
+    }
+    .chips input{ margin-right:6px; }
+
+    .actions{
+      display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;
+    }
+    .actions-bottom{ justify-content: flex-end; margin-top: 18px; }
+    @media (max-width: 720px){ .actions-bottom{ justify-content: center; } }
+    button{
+      border:1px solid var(--line); border-radius: 10px; padding: 12px 16px; cursor:pointer;
+      font-weight:600; background:#fff; color:var(--ink);
+    }
+    .primary{ background: var(--accent); color: var(--accent-ink); }
+    .danger{ background: #fff; border-color:#ef4444; color:#b91c1c; }
+    button:disabled{ opacity:.6; cursor: not-allowed; }
+
+    .error{ border-color: #ef4444 !important; box-shadow: 0 0 0 2px rgba(239,68,68,.15); }
+    .hr{ height:2px; background: var(--accent); margin: 14px 0; border-radius: 99px; }
+    footer{ margin-top: 18px; color:var(--mut); font-size:.9rem; text-align:center; }
+
+    /* Firma canvas */
+    #sigWrap{ background:#fff; border:2px dashed var(--line); border-radius:10px; padding:10px; }
+    #sigCanvas{ width:100%; height:200px; display:block; background:#fff; border-radius:6px; }
+    .sig-label{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .sig-hint{ color:var(--mut); font-size:.85rem; }
+
+    @media (max-width: 900px){
+      .field.half{ grid-column: span 12; }
+      .field.third{ grid-column: span 12; }
+      .field.two{ grid-column: span 6; }
+      .brand-logo{ height:36px; }
+    }
   </style>
 </head>
 <body>
-  <!-- ========== ENCABEZADO ========== -->
-  <header>
-    <div class="inner">
+  <div class="wrap">
+    <header class="h">
       <div class="brand">
-        <div class="logo">
-          <img src="logo.png" alt="Logo Agronomía Inteligente SRL" loading="eager" decoding="async">
-        </div>
-        <div class="titles">
-          <div class="title">Agronomía Inteligente SRL</div>
-          <div class="subtitle">Datos del Técnico Instalador</div>
+        <img id="logo" class="brand-logo" src="logo.png" alt="Logo Agronomía Inteligente SRL"/>
+        <div>
+          <h1>Agronomía Inteligente SRL</h1>
+          <div class="sub">Datos personales</div>
         </div>
       </div>
-      <span class="chip">Factura A requerida</span>
-    </div>
-  </header>
+      <div class="bar-yellow"></div>
+      <div class="notice">Importante: <strong>siempre solicitamos Factura A</strong>. Si no contás con Factura A, informanos antes de continuar.</div>
+    </header>
 
-  <!-- ========== CONTENIDO ========== -->
-  <main>
-    <section class="card">
-      <form id="formTec" novalidate>
-        <!-- 1) DATOS PERSONALES PARA CONTACTO -->
-        <div class="section-title">1) Datos personales para contacto</div>
-        <div class="grid">
-          <div><label>Nombre y Apellido <span class="req">*</span></label><input id="nombre" required placeholder="Juan Pérez"/></div>
-          <div><label>DNI / CUIT <span class="req">*</span></label><input id="dni" required placeholder="20-12345678-3"/></div>
-          <div><label>Correo electrónico <span class="req">*</span></label><input id="email" type="email" required placeholder="juan@mail.com"/></div>
-          <div><label>Teléfono <span class="req">*</span></label><input id="tel" required placeholder="+54 9 11 1234-5678"/></div>
-          <div><label>Ciudad / Provincia <span class="req">*</span></label><input id="ciudad" required placeholder="CABA / Buenos Aires"/></div>
-          <div><label>CBU / Alias para pago <span class="req">*</span></label><input id="cbu" required placeholder="CBU o Alias"/></div>
-          <div>
-            <label>Banco donde se paga <span class="req">*</span></label>
-            <input id="bancoPago" required placeholder="Ej.: Banco Nación"/>
-            <div class="note">Usaremos este dato para identificar el banco emisor del pago.</div>
+    <section class="panel">
+      <form id="frm" class="grid" onsubmit="return false">
+        <div class="section-title">Identificación</div>
+        <div class="field half">
+          <label class="req" for="nombre">Nombre y Apellido</label>
+          <input id="nombre" type="text" placeholder="Ej: Juan Pérez" required/>
+        </div>
+        <div class="field third">
+          <label class="req" for="dni">DNI / CUIT</label>
+          <input id="dni" type="text" placeholder="Ej: 20-12345678-3" required/>
+        </div>
+        <div class="field third">
+          <label class="req" for="email">Email</label>
+          <input id="email" type="email" placeholder="ejemplo@correo.com" required/>
+        </div>
+        <div class="field third">
+          <label class="req" for="tel">Teléfono</label>
+          <input id="tel" type="tel" placeholder="+54 9 11 1234-5678" required/>
+        </div>
+
+        <div class="section-title">Ubicación</div>
+        <div class="field half">
+          <label class="req" for="ciudad">Ciudad / Provincia</label>
+          <input id="ciudad" type="text" placeholder="Ej: San Martín, Buenos Aires" required/>
+          <div class="help">Se usa para asignación de zonas y logística.</div>
+        </div>
+
+        <div class="section-title">Datos de pago y facturación</div>
+        <div class="field third">
+          <label class="req" for="cbu">CBU / Alias</label>
+          <input id="cbu" type="text" placeholder="CBU o alias" required/>
+        </div>
+        <div class="field third">
+          <label class="req" for="bancoPago">Banco donde se paga</label>
+          <input id="bancoPago" type="text" placeholder="Ej: Banco Nación" required/>
+        </div>
+        <div class="field third">
+          <label class="req" for="fact">Tipo de Factura</label>
+          <select id="fact" required>
+            <option value="">Seleccione...</option>
+            <option value="Factura A" selected>Factura A</option>
+            <option value="Factura B">Factura B</option>
+            <option value="Factura C">Factura C</option>
+            <option value="Monotributo (A)">Monotributo (A)</option>
+          </select>
+          <div class="help">Recordatorio: siempre solicitamos <strong>Factura A</strong>.</div>
+        </div>
+
+        <div class="section-title">Modalidad de trabajo y cobertura</div>
+        <div class="field">
+          <label class="req">Modalidad de trabajo</label>
+          <div class="row chips" id="modalidadChips">
+            <label class="chip"><input type="checkbox" name="modal" value="Vendedor / Distribuidor">Vendedor / Distribuidor</label>
+            <label class="chip"><input type="checkbox" name="modal" value="Instalador">Instalador</label>
+            <label class="chip"><input type="checkbox" name="modal" value="Otros">Otros</label>
+            <input id="modalOtro" type="text" placeholder="Especifique (si eligió Otros)" style="flex:1; min-width:220px;">
           </div>
-          <div>
-            <label>Modalidad de facturación <span class="req">*</span></label>
-            <select id="fact" required>
-              <option value="">Seleccionar…</option>
-              <option>Monotributista</option>
-              <option>Autónomo</option>
-              <option>Responsable Inscripto</option>
-            </select>
-            <div class="note">Siempre solicitaremos <strong>FACTURA A</strong>.</div>
+        </div>
+        <div class="field third">
+          <label class="req" for="radioKm">Radio de cobertura (km)</label>
+          <input id="radioKm" type="number" min="1" step="1" placeholder="Ej: 150" required/>
+        </div>
+
+        <div class="section-title">Disponibilidad</div>
+        <div class="field half">
+          <label class="req">Días disponibles</label>
+          <div class="row chips" id="diasChips">
+            <label class="chip"><input type="checkbox" name="dia" value="Lun">Lun</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Mar">Mar</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Mié">Mié</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Jue">Jue</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Vie">Vie</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Sáb">Sáb</label>
+            <label class="chip"><input type="checkbox" name="dia" value="Dom">Dom</label>
+          </div>
+        </div>
+        <div class="field half">
+          <label class="req">Franja horaria disponible</label>
+          <div class="row">
+            <div>
+              <div class="help">Desde</div>
+              <input id="horaDesde" type="time" required>
+            </div>
+            <div>
+              <div class="help">Hasta</div>
+              <input id="horaHasta" type="time" required>
+            </div>
           </div>
         </div>
 
-        <!-- 2) MODALIDAD DE TRABAJO (OBLIGATORIO) -->
-        <div class="section-title">2) Modalidad de trabajo <span class="req">*</span></div>
-        <div class="checks">
-          <label class="check"><input type="checkbox" id="modVendor"/><span><strong>Vendor / Distribuidor</strong></span></label>
-          <label class="check"><input type="checkbox" id="modInstalador"/><span><strong>Instalador</strong></span></label>
-          <label class="check"><input type="checkbox" id="modOtros"/><span><strong>Otros</strong> — especifique</span></label>
-          <input id="modOtrosDetalle" placeholder="Detalle de otros" style="display:none"/>
+        <div class="section-title">Firma</div>
+        <div class="field">
+          <div class="sig-label">
+            <label for="sigCanvas" class="req">Firma del Técnico</label>
+            <span class="sig-hint">Dibuje dentro del recuadro usando mouse o dedo</span>
+          </div>
+          <div id="sigWrap">
+            <canvas id="sigCanvas"></canvas>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button id="btnClearSig" type="button">Limpiar firma</button>
+          </div>
         </div>
 
-        <!-- 3) ZONA DE COBERTURA -->
-        <div class="section-title">3) Zona de cobertura</div>
-        <div class="grid">
-          <div><label>Radio de cobertura (km) <span class="req">*</span></label><input id="radioKm" type="number" step="0.1" min="0" required placeholder="50"/></div>
-          <div><label>Observaciones <span class="req">*</span></label><input id="obs" required placeholder="Notas adicionales, disponibilidad, etc."/></div>
+        <div class="section-title">Otros</div>
+        <div class="field">
+          <label for="obs">Observaciones</label>
+          <textarea id="obs" placeholder="Experiencia, equipamiento, movilidad, etc."></textarea>
         </div>
-
-        <!-- 4) DISPONIBILIDAD (OBLIGATORIA) -->
-        <div class="section-title" id="seccion-disponibilidad">4) Disponibilidad (días y franja horaria) <span class="req">*</span></div>
-        <div class="days">
-          <label class="check"><input type="checkbox" id="d_lun"/><span><strong>Lun</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_mar"/><span><strong>Mar</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_mie"/><span><strong>Mié</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_jue"/><span><strong>Jue</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_vie"/><span><strong>Vie</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_sab"/><span><strong>Sáb</strong></span></label>
-          <label class="check"><input type="checkbox" id="d_dom"/><span><strong>Dom</strong></span></label>
+        <div class="field half">
+          <label class="req" for="lugar">Lugar</label>
+          <input id="lugar" type="text" placeholder="Ej: Buenos Aires" required/>
         </div>
-        <div class="grid" style="margin-top:10px">
-          <div><label>Desde (hora) <span class="req">*</span></label><input id="horaDesde" type="time" required/></div>
-          <div><label>Hasta (hora) <span class="req">*</span></label><input id="horaHasta" type="time" required/></div>
+        <div class="field third">
+          <label class="req" for="fecha">Fecha</label>
+          <input id="fecha" type="date" required/>
         </div>
-
-        <!-- 5) FIRMA -->
-        <div class="section-title">5) Firma del técnico</div>
-        <div class="sig-box"><canvas id="firma"></canvas></div>
-        <div class="actions"><button type="button" class="btn" id="limpiarFirma">Borrar firma</button></div>
-
-        <div class="grid" style="margin-top:14px">
-          <div><label>Lugar <span class="req">*</span></label><input id="lugar" required placeholder="Ciudad"/></div>
-          <div><label>Fecha <span class="req">*</span></label><input id="fecha" type="date" required/></div>
-        </div>
-
-        <div class="actions">
-          <button type="button" class="btn warn" id="btnJira">Enviar datos personales</button>
-          <button type="button" class="btn" id="btnLimpiar">Limpiar todo</button>
-        </div>
-
-        <p class="small" style="margin-top:8px">Los campos con * son obligatorios. El envío adjunta el PDF firmado.</p>
       </form>
     </section>
 
-    <footer>© <span id="anio"></span> Agronomía Inteligente SRL</footer>
-  </main>
+    <!-- Acciones al final de la página -->
+    <div class="actions actions-bottom">
+      <button id="btnJira" class="primary" type="button">Enviar datos personales</button>
+      <button id="btnLimpiar" class="danger" type="button">Limpiar todo</button>
+    </div>
 
-  <script>
-    const pad = n => String(n).padStart(2,'0');
+    <footer>© Agronomía Inteligente SRL</footer>
+  </div>
+
+<script>
+  // ============== Utils ==============
+  function $(id){ return document.getElementById(id); }
+  function getChecks(name){
+    return Array.from(document.querySelectorAll('input[name="'+name+'"]:checked')).map(x=>x.value);
+  }
+  function getFormValues(){
+    const seleccion = getChecks('modal');
+    const otro = $('modalOtro').value.trim();
+    const modalidades = seleccion.concat(otro ? ['Otros: '+otro] : []).join(', ');
+
+    return {
+      nombre: $('nombre').value.trim(),
+      dni: $('dni').value.trim(),
+      email: $('email').value.trim().toLowerCase(),
+      tel: $('tel').value.trim(),
+      ciudad: $('ciudad').value.trim(),
+      cbu: $('cbu').value.trim(),
+      bancoPago: $('bancoPago').value.trim(),
+      fact: $('fact').value,
+      modalidades,
+      radioKm: $('radioKm').value.trim(),
+      diasDisponibles: getChecks('dia').join(', ') || '',
+      horaDesde: $('horaDesde').value,
+      horaHasta: $('horaHasta').value,
+      obs: $('obs').value.trim(),
+      lugar: $('lugar').value.trim(),
+      fecha: $('fecha').value
+    };
+  }
+  
+  function validar(){
+    const reqIds = ['nombre','dni','email','tel','ciudad','cbu','bancoPago','fact','radioKm','horaDesde','horaHasta','lugar','fecha'];
+    let ok = true;
+    
+    // Limpiar errores previos
+    document.querySelectorAll('.error').forEach(el=>el.classList.remove('error'));
+    
+    // Validar campos de texto obligatorios
+    for (const id of reqIds){
+      const el = $(id);
+      if (!el) continue;
+      
+      let val;
+      if (el.type === 'text' || el.type === 'email' || el.type === 'tel' || el.type === 'number' || el.tagName === 'TEXTAREA'){
+        val = el.value.trim();
+      } else {
+        val = el.value;
+      }
+      
+      if (!val){
+        el.classList.add('error'); 
+        ok = false;
+      }
+    }
+    
+    // Validar email específicamente
+    const emailInput = $('email');
+    const email = emailInput.value.trim().toLowerCase();
+    emailInput.value = email;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      emailInput.classList.add('error'); 
+      ok = false;
+    }
+
+    // Validar modalidad de trabajo
+    const mods = getChecks('modal');
+    const otro = $('modalOtro').value.trim();
+    if (mods.length === 0 && !otro){
+      const cont = $('modalidadChips');
+      if (cont) {
+        cont.style.outline = '2px solid #ef4444';
+        cont.style.borderRadius = '8px';
+        setTimeout(()=>{
+          cont.style.outline='none';
+          cont.style.borderRadius='';
+        }, 3000);
+      }
+      ok = false;
+    }
+    
+    // Validar días disponibles
+    const dias = getChecks('dia');
+    if (dias.length === 0){
+      const cont = $('diasChips');
+      if (cont) {
+        cont.style.outline = '2px solid #ef4444';
+        cont.style.borderRadius = '8px';
+        setTimeout(()=>{
+          cont.style.outline='none';
+          cont.style.borderRadius='';
+        }, 3000);
+      }
+      ok = false;
+    }
+    
+    // Validar firma
+    if (!sig.hasStroke){
+      const sigWrap = $('sigWrap');
+      if (sigWrap) {
+        sigWrap.style.borderColor = '#ef4444';
+        setTimeout(()=>{
+          sigWrap.style.borderColor = 'var(--line)';
+        }, 3000);
+      }
+      ok = false;
+    }
+
+    if (!ok) {
+      alert('Revisá los campos marcados en rojo.');
+    }
+    return ok;
+  }
+  
+  function limpiarFormulario(){ 
+    $('frm').reset(); 
+    clearSignature();
+    // Restaurar fecha por defecto
     const today = new Date();
-    document.getElementById('anio').textContent = today.getFullYear();
-    const fechaEl = document.getElementById('fecha');
-    function setTodayIfEmpty(){ if (fechaEl && !fechaEl.value) fechaEl.value = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`; }
-    setTodayIfEmpty();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+    $('fecha').value = `${yyyy}-${mm}-${dd}`;
+  }
 
-    // Mostrar "Otros" si corresponde (y marcar requerido cuando esté activo)
-    const chkOtros = document.getElementById('modOtros');
-    const otrosDetalle = document.getElementById('modOtrosDetalle');
-    function toggleOtros(){
-      const show = chkOtros.checked;
-      otrosDetalle.style.display = show ? 'block' : 'none';
-      otrosDetalle.required = show; // obligatorio si se elige "Otros"
+  // ============== Firma (canvas) ==============
+  const sig = { canvas:null, ctx:null, drawing:false, hasStroke:false, scale:1 };
+  function initSignature(){
+    sig.canvas = $('sigCanvas');
+    sig.ctx = sig.canvas.getContext('2d');
+    resizeSignatureCanvas(); // scale to DPR
+    sig.ctx.lineWidth = 2;
+    sig.ctx.lineCap = 'round';
+    sig.ctx.strokeStyle = '#111827';
+
+    const pos = e => {
+      const rect = sig.canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return { x: x * sig.scale, y: y * sig.scale };
+    };
+
+    const start = e => { e.preventDefault(); sig.drawing = true; sig.ctx.beginPath(); const p = pos(e); sig.ctx.moveTo(p.x, p.y); };
+    const move  = e => { if(!sig.drawing) return; const p = pos(e); sig.ctx.lineTo(p.x, p.y); sig.ctx.stroke(); sig.hasStroke = true; };
+    const end   = e => { if(!sig.drawing) return; sig.drawing = false; };
+
+    sig.canvas.addEventListener('mousedown', start);
+    sig.canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+
+    sig.canvas.addEventListener('touchstart', start, {passive:false});
+    sig.canvas.addEventListener('touchmove', move, {passive:false});
+    window.addEventListener('touchend', end);
+
+    $('btnClearSig').addEventListener('click', clearSignature);
+    window.addEventListener('resize', resizeSignatureCanvas);
+  }
+  function resizeSignatureCanvas(){
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = sig.canvas.clientWidth;
+    const cssH = sig.canvas.clientHeight || 200;
+    sig.canvas.width = Math.floor(cssW * dpr);
+    sig.canvas.height = Math.floor(cssH * dpr);
+    sig.scale = dpr;
+    // fondo blanco
+    sig.ctx && (sig.ctx.fillStyle = '#ffffff', sig.ctx.fillRect(0,0,sig.canvas.width,sig.canvas.height));
+    sig.hasStroke = false;
+  }
+  function clearSignature(){
+    if (!sig.ctx) return;
+    sig.ctx.clearRect(0,0,sig.canvas.width,sig.canvas.height);
+    sig.ctx.fillStyle = '#ffffff'; sig.ctx.fillRect(0,0,sig.canvas.width,sig.canvas.height);
+    sig.hasStroke = false;
+  }
+  function getSignatureDataURL(){
+    if (!sig.canvas) return null;
+    if (!sig.hasStroke) return null;
+    return sig.canvas.toDataURL('image/png');
+  }
+
+  // ============== Logo (para PDF) ==============
+  async function getLogoDataURL(){
+    const imgEl = $('logo');
+    if (imgEl && imgEl.complete && imgEl.naturalWidth){
+      const c = document.createElement('canvas');
+      c.width = imgEl.naturalWidth; c.height = imgEl.naturalHeight;
+      const cx = c.getContext('2d');
+      cx.drawImage(imgEl, 0, 0);
+      try{ return c.toDataURL('image/png'); }catch(e){}
     }
-    chkOtros.addEventListener('change', toggleOtros);
-    toggleOtros(); // estado inicial
-
-    // Firma
-    const canvas = document.getElementById('firma');
-    const ctx = canvas.getContext('2d');
-    function drawWatermark(){ if (!isCanvasBlank(canvas)) return; ctx.save(); ctx.globalAlpha = .15; ctx.font = '24px system-ui'; ctx.fillStyle = '#64748b'; ctx.fillText('— Firma —', 20, canvas.height - 20); ctx.restore(); }
-    function baseSetup(){ ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a'; }
-    function isCanvasBlank(c){ const blank = document.createElement('canvas'); blank.width = c.width; blank.height = c.height; return c.toDataURL() === blank.toDataURL(); }
-    function resizeCanvas({preserve=false}={}){ const hasData = preserve && !isCanvasBlank(canvas); const dataURL = hasData ? canvas.toDataURL('image/png') : null; const r = canvas.parentElement.getBoundingClientRect(); const newW = Math.floor(r.width - 8), newH = Math.floor(r.height - 8); if (canvas.width === newW && canvas.height === newH) return; canvas.width = newW; canvas.height = newH; baseSetup(); if (dataURL){ const img = new Image(); img.onload = ()=> { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = dataURL; } else { drawWatermark(); } }
-    let resizeTimer = null; function debouncedResize(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=> resizeCanvas({preserve:true}), 150); }
-    window.addEventListener('resize', debouncedResize); resizeCanvas({preserve:false});
-    let drawing=false, last=null;
-    function startDraw(x,y){ drawing=true; last={x,y}; }
-    function moveDraw(x,y){ if(!drawing) return; ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(x,y); ctx.stroke(); last={x,y}; }
-    function endDraw(){ drawing=false; last=null; }
-    canvas.addEventListener('mousedown', e=> startDraw(e.offsetX,e.offsetY));
-    canvas.addEventListener('mousemove', e=> moveDraw(e.offsetX,e.offsetY));
-    window.addEventListener('mouseup', endDraw);
-    canvas.addEventListener('touchstart', e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect(); const t=e.touches[0]; startDraw(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
-    canvas.addEventListener('touchmove', e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect(); const t=e.touches[0]; moveDraw(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
-    canvas.addEventListener('touchend', e=>{ e.preventDefault(); endDraw(); }, {passive:false});
-    document.getElementById('limpiarFirma').addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); drawWatermark(); });
-
-    // ====== Valores ======
-    function valores(){
-      const v = id => (document.getElementById(id).value || '').trim();
-      const mods = [];
-      if (document.getElementById('modVendor').checked) mods.push('Vendor/Barra distribuidor');
-      if (document.getElementById('modInstalador').checked) mods.push('Instalador');
-      if (document.getElementById('modOtros').checked){ const d = v('modOtrosDetalle'); mods.push(d ? ('Otros: ' + d) : 'Otros'); }
-
-      const dias = [];
-      if (document.getElementById('d_lun').checked) dias.push('Lun');
-      if (document.getElementById('d_mar').checked) dias.push('Mar');
-      if (document.getElementById('d_mie').checked) dias.push('Mié');
-      if (document.getElementById('d_jue').checked) dias.push('Jue');
-      if (document.getElementById('d_vie').checked) dias.push('Vie');
-      if (document.getElementById('d_sab').checked) dias.push('Sáb');
-      if (document.getElementById('d_dom').checked) dias.push('Dom');
-
-      return {
-        nombre:v('nombre'), dni:v('dni'), email:v('email'), tel:v('tel'),
-        ciudad:v('ciudad'),
-        cbu:v('cbu'), bancoPago:v('bancoPago'), fact:v('fact'),
-        modalidades:mods.join(' | '),
-        radioKm:v('radioKm'), obs:v('obs'),
-        diasDisponibles:dias.join(' | '),
-        horaDesde:v('horaDesde'), horaHasta:v('horaHasta'),
-        lugar:v('lugar'), fecha:v('fecha')
-      };
-    }
-
-    // ====== VALIDACIÓN (todo obligatorio) ======
-    function validar(){
-      const form = document.getElementById('formTec');
-
-      // HTML5 'required'
-      if (!form.checkValidity()){
-        form.reportValidity();
-        return false;
-      }
-
-      // Al menos una modalidad
-      const algunModo = ['modVendor','modInstalador','modOtros'].some(id => document.getElementById(id).checked);
-      if (!algunModo){
-        alert('Seleccioná al menos una opción en "Modalidad de trabajo".');
-        return false;
-      }
-
-      // Detalle "Otros" si corresponde
-      if (document.getElementById('modOtros').checked){
-        const d = (document.getElementById('modOtrosDetalle').value || '').trim();
-        if (!d){
-          alert('Indicá el detalle para "Otros" en Modalidad de trabajo.');
-          document.getElementById('modOtrosDetalle').focus();
-          return false;
-        }
-      }
-
-      // Al menos un día disponible
-      const algunDia = ['d_lun','d_mar','d_mie','d_jue','d_vie','d_sab','d_dom'].some(id => document.getElementById(id).checked);
-      if (!algunDia){
-        alert('Seleccioná al menos un día en "Disponibilidad".');
-        return false;
-      }
-
-      // Franja horaria completa y válida
-      const hd = document.getElementById('horaDesde').value;
-      const hh = document.getElementById('horaHasta').value;
-      if (!hd || !hh){
-        alert('Completá la franja horaria: Desde y Hasta.');
-        return false;
-      }
-      const toMin = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
-      if (toMin(hh) <= toMin(hd)){
-        alert('La hora "Hasta" debe ser mayor que "Desde".');
-        return false;
-      }
-
-      // Firma obligatoria
-      if (isCanvasBlank(canvas)){
-        alert('Por favor, firmá en el recuadro.');
-        return false;
-      }
-
-      return true;
-    }
-
-    /* ===== Logo para PDF ===== */
-    let LOGO_DATAURL = null;
-    async function fetchLogoAsDataURL(){
-      try{
-        const img = document.querySelector('.logo img'); if (!img) return null;
-        const url = img.getAttribute('src'); if (!url) return null;
-        const res = await fetch(url, {cache:'no-store'});
-        if (res.ok){
-          const blob = await res.blob();
-          const dataURL = await new Promise((resolve, reject)=>{
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result);
-            fr.onerror = reject;
-            fr.readAsDataURL(blob);
-          });
-          return String(dataURL);
-        }
-      }catch(e){}
-      try{
-        const img = document.querySelector('.logo img');
-        if (!img || !img.complete || !img.naturalWidth) return null;
-        const c = document.createElement('canvas'); c.width = img.naturalWidth || 128; c.height = img.naturalHeight || 128;
-        const x = c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height);
-        return c.toDataURL('image/png');
-      }catch(e){ return null; }
-    }
-    (async function preloadLogoForPDF(){ LOGO_DATAURL = await fetchLogoAsDataURL(); })();
-
-    // ===== PDF =====
-    function generarPDFDatosBlob(){
-      const vals = valores();
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ unit:'pt', format:'a4' });
-      const W = pdf.internal.pageSize.getWidth();
-      const H = pdf.internal.pageSize.getHeight();
-
-      // Encabezado
-      pdf.setFillColor(35,49,67); pdf.rect(0,0,W,64,'F');
-      pdf.setTextColor(255,255,255);
-      const LOGO_W = 36, LOGO_H = 36, LOGO_X = 40, LOGO_Y = 14;
-      let textX = 40;
-      if (LOGO_DATAURL){
-        try{ pdf.addImage(LOGO_DATAURL,'PNG',LOGO_X,LOGO_Y,LOGO_W,LOGO_H,undefined,'FAST'); textX = LOGO_X + LOGO_W + 12; }catch(e){}
-      }
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(16); pdf.text('Agronomía Inteligente SRL', textX, 40);
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(11); pdf.text('Datos del Técnico Instalador', textX, 58);
-
-      // Tabla
-      const rows = [
-        ['Nombre y Apellido', vals.nombre],
-        ['DNI/CUIT', vals.dni],
-        ['Email', vals.email],
-        ['Teléfono', vals.tel],
-        ['Ciudad / Provincia', vals.ciudad],
-        ['CBU/Alias', vals.cbu],
-        ['Banco donde se paga', vals.bancoPago],
-        ['Modalidad de facturación', vals.fact + ' (Factura A)']
-      ];
-      if (pdf.autoTable){
-        pdf.autoTable({
-          startY:96, head:[['Dato','Valor']], body:rows, theme:'grid',
-          styles:{fontSize:10,cellPadding:6}, headStyles:{fillColor:[35,49,67], textColor:255}, columnStyles:{0:{cellWidth:190}}
-        });
-      }
-      let y = (pdf.lastAutoTable ? pdf.lastAutoTable.finalY : 220) + 12;
-
-      // Modalidad + Cobertura
-      pdf.setTextColor(35,49,67);
-      pdf.setFont('helvetica','bold'); pdf.text('Modalidad de trabajo', 40, y); y+=14;
-      pdf.setFont('helvetica','normal'); pdf.text(pdf.splitTextToSize(vals.modalidades || '—', W-80), 40, y); y += 18;
-
-      pdf.setFont('helvetica','bold'); pdf.text('Zona de cobertura', 40, y); y+=14;
-      pdf.setFont('helvetica','normal'); pdf.text(`Radio de cobertura: ${vals.radioKm} km`, 40, y); y += 18;
-
-      // Disponibilidad
-      pdf.setFont('helvetica','bold'); pdf.text('Disponibilidad', 40, y); y+=14;
-      pdf.setFont('helvetica','normal');
-      pdf.text(`Días: ${vals.diasDisponibles}`, 40, y); y+=14;
-      pdf.text(`Franja horaria: ${vals.horaDesde} a ${vals.horaHasta}`, 40, y); y += 18;
-
-      // Observaciones
-      pdf.setFont('helvetica','bold'); pdf.text('Observaciones', 40, y); y+=14;
-      pdf.setFont('helvetica','normal');
-      const o = pdf.splitTextToSize(vals.obs, W-80);
-      pdf.text(o, 40, y); y += o.length*14 + 6;
-
-      // Lugar/Fecha + Firma
-      pdf.text(`Lugar y fecha: ${vals.lugar}, ${vals.fecha}`, 40, y); y+=24;
-      const img=canvas.toDataURL('image/png'); const sigW=220, sigH=90;
-      if (y + sigH + 80 > H){ pdf.addPage(); y = 60; }
-      pdf.text('Firma del técnico', 40, y-8);
-      pdf.addImage(img,'PNG',40,y,sigW,sigH,undefined,'FAST');
-      pdf.setDrawColor(150); pdf.rect(40,y,sigW,sigH); y += sigH + 20;
-      pdf.setFont('helvetica','italic'); pdf.text(`${vals.nombre} — DNI/CUIT: ${vals.dni}`, 40, y);
-
-      const safeName = vals.nombre.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g,'').trim().replace(/\s+/g,'_');
-      const fileName = `Datos_Tecnico_${safeName}_${vals.fecha}.pdf`;
-      const blob = pdf.output('blob');
-      return { blob, fileName, vals };
-    }
-
-    // Descargar PDF
-    document.getElementById('btnPDF').addEventListener('click', ()=>{
-      if (!validar()) return;
-      const { blob, fileName } = generarPDFDatosBlob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName;
-      a.click(); URL.revokeObjectURL(a.href);
-    });
-
-    // Envío a Jira vía PROXY
-    const PROXY_URL = 'https://jira-proxy-production.up.railway.app';
-    function toADF(paragraphs){ return { version:1, type:'doc', content: paragraphs.map(text => ({ type:'paragraph', content:[{type:'text', text}] })) }; }
-    async function enviarAJiraViaProxy({blob, fileName, vals}){
-      const lines = [
-        `Técnico: ${vals.nombre} — DNI/CUIT: ${vals.dni}`,
-        `Email: ${vals.email} | Tel: ${vals.tel}`,
-        `Ciudad/Provincia: ${vals.ciudad}`,
-        `CBU/Alias: ${vals.cbu} | Banco donde se paga: ${vals.bancoPago}`,
-        `Facturación: ${vals.fact} (Factura A)`,
-        `Modalidad de trabajo: ${vals.modalidades}`,
-        `Zona de cobertura: Radio ${vals.radioKm} km`,
-        `Días disponibles: ${vals.diasDisponibles}`,
-        `Franja horaria disponible: ${vals.horaDesde} a ${vals.horaHasta}`,
-        `Observaciones: ${vals.obs}`,
-        `Lugar/Fecha: ${vals.lugar} — ${vals.fecha}`,
-        '',
-        'Adjunto: Datos del técnico en PDF firmado.'
-      ];
-      const descriptionADF = toADF(lines);
-
-      // Blob -> base64
-      const pdfBase64 = await new Promise((resolve, reject)=>{
+    try{
+      const resp = await fetch('logo.png', {cache:'no-store'});
+      if (!resp.ok) throw new Error('no logo');
+      const blob = await resp.blob();
+      return await new Promise((resolve, reject)=>{
         const r = new FileReader();
-        r.onload = () => resolve(String(r.result).split(',')[1]);
+        r.onload = ()=> resolve(r.result);
         r.onerror = reject;
         r.readAsDataURL(blob);
       });
+    }catch(e){ return null; }
+  }
 
-      const resp = await fetch(`${PROXY_URL}/api/contrato/json`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          summary:`Datos personales — ${vals.nombre}`,
-          labels:['tecnicos','datos'],
-          descriptionADF,
-          pdfBase64,
-          pdfFilename:fileName
-        })
-      });
-      if (!resp.ok){ const t = await resp.text(); throw new Error('Proxy error: ' + t); }
-      const data = await resp.json();
-      return data.key;
+  // ============== PDF (se genera al enviar) ==============
+  async function generarPDFDatosBlob(){
+    const vals = getFormValues();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const W = doc.internal.pageSize.getWidth();
+
+    // Encabezado con logo
+    const logoData = await getLogoDataURL();
+    if (logoData){
+      const logoW = 110, logoH = 44;
+      doc.addImage(logoData, 'PNG', 40, 24, logoW, logoH);
+      doc.setTextColor(17,24,39);
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text('Agronomía Inteligente SRL', 40 + logoW + 14, 40);
+      doc.setFont('helvetica','normal'); doc.setFontSize(12);
+      doc.text('Datos personales', 40 + logoW + 14, 60);
+    }else{
+      doc.setTextColor(17,24,39);
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text('Agronomía Inteligente SRL', 40, 40);
+      doc.setFont('helvetica','normal'); doc.setFontSize(12);
+      doc.text('Datos personales', 40, 60);
     }
-    document.getElementById('btnJira').addEventListener('click', async ()=>{
-      try{
-        if (!validar()) return;
-        const pkg = generarPDFDatosBlob();
-        await enviarAJiraViaProxy(pkg);
-        alert('Datos personales enviados');
-      }catch(err){
-        console.error(err);
-        alert('Error al enviar: ' + err.message);
-      }
+
+    // Línea amarilla
+    doc.setDrawColor(250, 204, 21);
+    doc.setLineWidth(2);
+    doc.line(40, 70, W-40, 70);
+
+    // Tabla
+    doc.setTextColor(17,24,39);
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+
+    const rows = [
+      ['Nombre y Apellido', vals.nombre],
+      ['DNI / CUIT', vals.dni],
+      ['Email', vals.email],
+      ['Teléfono', vals.tel],
+      ['Ciudad / Provincia', vals.ciudad],
+      ['CBU / Alias', vals.cbu],
+      ['Banco donde se paga', vals.bancoPago],
+      ['Tipo de Factura', vals.fact],
+      ['Modalidad de trabajo', vals.modalidades],
+      ['Radio de cobertura (km)', vals.radioKm],
+      ['Días disponibles', vals.diasDisponibles],
+      ['Franja horaria', (vals.horaDesde||'') + ' a ' + (vals.horaHasta||'')],
+      ['Observaciones', vals.obs || '-'],
+      ['Lugar', vals.lugar],
+      ['Fecha', vals.fecha]
+    ];
+
+    doc.autoTable({
+      startY: 90,
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, halign:'left', textColor:[17,24,39], lineColor:[17,24,39], lineWidth:0.5 },
+      headStyles: { fillColor: [250,204,21], textColor:[17,24,39], fontStyle:'bold', lineColor:[17,24,39], lineWidth:0.5 },
+      tableLineColor: [17,24,39],
+      tableLineWidth: 0.8,
+      head: [['Campo','Valor']],
+      body: rows
     });
 
-    // Limpiar
-    function limpiarFormulario(){
-      const form = document.getElementById('formTec');
-      form.reset();
-      ['modVendor','modInstalador','modOtros','d_lun','d_mar','d_mie','d_jue','d_vie','d_sab','d_dom'].forEach(id=>{
-        const el = document.getElementById(id); if (el) el.checked = false;
-      });
-      document.getElementById('modOtrosDetalle').style.display='none';
-      setTodayIfEmpty();
-      ctx.clearRect(0,0,canvas.width,canvas.height); drawWatermark();
+    // Bloque de firma
+    let y = (doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : 90) + 24;
+    const sigW = W - 80, sigH = 140;
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.setTextColor(17,24,39);
+    doc.text('Firma del Técnico', 40, y);
+    y += 8;
+    // marco
+    doc.setDrawColor(17,24,39); doc.setLineWidth(0.8);
+    doc.rect(40, y, sigW, sigH);
+
+    const sigData = getSignatureDataURL();
+    if (sigData){
+      const pad = 10;
+      const boxW = sigW - pad*2, boxH = sigH - pad*2;
+      doc.addImage(sigData, 'PNG', 40+pad, y+pad, boxW, boxH);
+    } else {
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text('_______________________________', 50, y + sigH - 16);
+      doc.text('Aclaración / DNI', 50, y + sigH - 4);
     }
-  </script>
+
+    const fileName = `DatosPersonales_${(vals.nombre||'persona').replace(/\s+/g,'_')}.pdf`;
+    const blob = doc.output('blob');
+    return { blob, fileName, vals };
+  }
+
+  // ============== Jira por proxy (usa el PDF) ==============
+  const PROXY_URL = 'https://jira-proxy-production.up.railway.app'; // Cambiar si usás otro endpoint
+  function toADF(paragraphs){
+    return {
+      version: 1, type: 'doc',
+      content: paragraphs.map(t => ({ type:'paragraph', content: [{ type:'text', text:String(t||'') }]}))
+    };
+  }
+  async function enviarAJiraViaProxy({blob, fileName, vals}){
+    const lines = [
+      `Nombre: ${vals.nombre} — DNI/CUIT: ${vals.dni}`,
+      `Email: ${vals.email} | Tel: ${vals.tel}`,
+      `Ciudad/Provincia: ${vals.ciudad}`,
+      `CBU/Alias: ${vals.cbu} | Banco donde se paga: ${vals.bancoPago}`,
+      `Facturación: ${vals.fact} (Recordatorio: se solicita Factura A)`,
+      `Modalidad de trabajo: ${vals.modalidades}`,
+      `Cobertura: Radio ${vals.radioKm} km`,
+      `Días disponibles: ${vals.diasDisponibles}`,
+      `Franja horaria disponible: ${vals.horaDesde} a ${vals.horaHasta}`,
+      `Observaciones: ${vals.obs || '-'}`,
+      `Lugar/Fecha: ${vals.lugar} — ${vals.fecha}`,
+      '',
+      'Adjunto: Datos personales en PDF.'
+    ];
+    const descriptionADF = toADF(lines);
+
+    const pdfBase64 = await new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+
+    const controller = new AbortController();
+    const t = setTimeout(()=>controller.abort(), 20000);
+
+    const resp = await fetch(`${PROXY_URL}/api/contrato/json`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        summary: `Datos personales — ${vals.nombre}`,
+        labels: ['tecnicos','datos'],
+        descriptionADF,
+        pdfBase64,
+        pdfFilename: fileName
+      }),
+      mode: 'cors',
+      signal: controller.signal
+    }).catch(err => {
+      clearTimeout(t);
+      throw new Error('No se pudo conectar al proxy (CORS/red): ' + err.message);
+    });
+    clearTimeout(t);
+
+    if (!resp.ok){
+      const text = await resp.text().catch(()=> '');
+      throw new Error(`Proxy respondió ${resp.status}: ${text || 'sin detalle'}`);
+    }
+    const data = await resp.json();
+    if (!data?.key) throw new Error('Respuesta del proxy sin issue key');
+    return data.key;
+  }
+
+  // ============== Listeners ==============
+  (function init(){
+    initSignature();
+
+    // Fecha por defecto
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+    if (!$('fecha').value) $('fecha').value = `${yyyy}-${mm}-${dd}`;
+
+    const btnJira = $('btnJira');
+    if (btnJira){
+      btnJira.addEventListener('click', async ()=>{
+        try{
+          if (!validar()) return;
+          btnJira.disabled = true;
+          const old = btnJira.textContent;
+          btnJira.textContent = 'Enviando…';
+
+          const pkg = await generarPDFDatosBlob();
+          const issueKey = await enviarAJiraViaProxy(pkg);
+          alert(`Contrato enviado. Ticket: ${issueKey}`);
+
+          btnJira.textContent = old;
+          btnJira.disabled = false;
+        }catch(err){
+          console.error(err);
+          alert('Error al enviar a Jira:\n' + (err?.message || err));
+          btnJira.textContent = 'Enviar datos personales';
+          btnJira.disabled = false;
+        }
+      });
+    }
+
+    const btnLimpiar = $('btnLimpiar');
+    if (btnLimpiar){ btnLimpiar.addEventListener('click', limpiarFormulario); }
+  })();
+</script>
 </body>
 </html>
-
-
