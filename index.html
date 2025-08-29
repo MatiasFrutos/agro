@@ -112,7 +112,7 @@
 
     /* Firma canvas */
     #sigWrap{ background:#fff; border:2px dashed var(--line); border-radius:10px; padding:10px; }
-    #sigCanvas{ width:100%; height:200px; display:block; background:#fff; border-radius:6px; }
+    #sigCanvas{ width:100%; height:200px; display:block; background:#fff; border-radius:6px; touch-action: none; }
     .sig-label{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
     .sig-hint{ color:var(--mut); font-size:.85rem; }
 
@@ -177,19 +177,29 @@
         <div class="field third">
           <label class="req" for="fact">Tipo de Factura</label>
           <select id="fact" required>
-            <option value="">Seleccione...</option>
-            <option value="Factura A" selected>Factura A</option>
-            <option value="Factura B">Factura B</option>
-            <option value="Factura C">Factura C</option>
-            <option value="Monotributo (A)">Monotributo (A)</option>
+            <option selected>Factura A</option>
+            <option>Factura B</option>
+            <option>Factura C</option>
+            <option>Monotributo (A)</option>
           </select>
           <div class="help">Recordatorio: siempre solicitamos <strong>Factura A</strong>.</div>
+        </div>
+
+        <div class="field third">
+          <label class="req" for="condicion">Condición fiscal</label>
+          <select id="condicion" required>
+            <option value="">Seleccionar…</option>
+            <option>Monotributista</option>
+            <option>Responsable Inscripto</option>
+            <option>Autónomo</option>
+          </select>
+          <div class="help">Indicá si sos monotributista, responsable inscripto o autónomo.</div>
         </div>
 
         <div class="section-title">Modalidad de trabajo y cobertura</div>
         <div class="field">
           <label class="req">Modalidad de trabajo</label>
-          <div class="row chips" id="modalidadChips">
+          <div class="row chips">
             <label class="chip"><input type="checkbox" name="modal" value="Vendedor / Distribuidor">Vendedor / Distribuidor</label>
             <label class="chip"><input type="checkbox" name="modal" value="Instalador">Instalador</label>
             <label class="chip"><input type="checkbox" name="modal" value="Otros">Otros</label>
@@ -204,7 +214,7 @@
         <div class="section-title">Disponibilidad</div>
         <div class="field half">
           <label class="req">Días disponibles</label>
-          <div class="row chips" id="diasChips">
+          <div class="row chips">
             <label class="chip"><input type="checkbox" name="dia" value="Lun">Lun</label>
             <label class="chip"><input type="checkbox" name="dia" value="Mar">Mar</label>
             <label class="chip"><input type="checkbox" name="dia" value="Mié">Mié</label>
@@ -287,6 +297,7 @@
       cbu: $('cbu').value.trim(),
       bancoPago: $('bancoPago').value.trim(),
       fact: $('fact').value,
+      condicion: $('condicion').value,
       modalidades,
       radioKm: $('radioKm').value.trim(),
       diasDisponibles: getChecks('dia').join(', ') || '',
@@ -297,115 +308,58 @@
       fecha: $('fecha').value
     };
   }
-  
   function validar(){
-    const reqIds = ['nombre','dni','email','tel','ciudad','cbu','bancoPago','fact','radioKm','horaDesde','horaHasta','lugar','fecha'];
+    const reqIds = ['nombre','dni','email','tel','ciudad','cbu','bancoPago','fact','condicion','radioKm','horaDesde','horaHasta','lugar','fecha'];
     let ok = true;
-    
-    // Limpiar errores previos
     document.querySelectorAll('.error').forEach(el=>el.classList.remove('error'));
-    
-    // Validar campos de texto obligatorios
+
     for (const id of reqIds){
       const el = $(id);
       if (!el) continue;
-      
-      let val;
-      if (el.type === 'text' || el.type === 'email' || el.type === 'tel' || el.type === 'number' || el.tagName === 'TEXTAREA'){
-        val = el.value.trim();
-      } else {
-        val = el.value;
-      }
-      
+      const val = (el.type === 'text' || el.type === 'email' || el.tagName === 'TEXTAREA')
+        ? el.value.trim() : el.value;
       if (!val){
-        el.classList.add('error'); 
-        ok = false;
+        el.classList.add('error'); ok = false;
       }
     }
-    
-    // Validar email específicamente
+    // normalizar email
     const emailInput = $('email');
-    const email = emailInput.value.trim().toLowerCase();
-    emailInput.value = email;
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-      emailInput.classList.add('error'); 
-      ok = false;
+    const em = emailInput.value.trim().toLowerCase();
+    emailInput.value = em;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){
+      emailInput.classList.add('error'); ok = false;
     }
 
-    // Validar modalidad de trabajo
     const mods = getChecks('modal');
     const otro = $('modalOtro').value.trim();
     if (mods.length === 0 && !otro){
-      const cont = $('modalidadChips');
-      if (cont) {
-        cont.style.outline = '2px solid #ef4444';
-        cont.style.borderRadius = '8px';
-        setTimeout(()=>{
-          cont.style.outline='none';
-          cont.style.borderRadius='';
-        }, 3000);
-      }
-      ok = false;
-    }
-    
-    // Validar días disponibles
-    const dias = getChecks('dia');
-    if (dias.length === 0){
-      const cont = $('diasChips');
-      if (cont) {
-        cont.style.outline = '2px solid #ef4444';
-        cont.style.borderRadius = '8px';
-        setTimeout(()=>{
-          cont.style.outline='none';
-          cont.style.borderRadius='';
-        }, 3000);
-      }
-      ok = false;
-    }
-    
-    // Validar firma
-    if (!sig.hasStroke){
-      const sigWrap = $('sigWrap');
-      if (sigWrap) {
-        sigWrap.style.borderColor = '#ef4444';
-        setTimeout(()=>{
-          sigWrap.style.borderColor = 'var(--line)';
-        }, 3000);
-      }
+      const cont = document.querySelector('.chips');
+      cont && (cont.style.outline = '2px solid #ef4444', setTimeout(()=>cont.style.outline='none', 1500));
       ok = false;
     }
 
-    if (!ok) {
-      alert('Revisá los campos marcados en rojo.');
-    }
+    if (!ok) alert('Revisá los campos marcados en rojo.');
     return ok;
   }
-  
-  function limpiarFormulario(){ 
-    $('frm').reset(); 
-    clearSignature();
-    // Restaurar fecha por defecto
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth()+1).padStart(2,'0');
-    const dd = String(today.getDate()).padStart(2,'0');
-    $('fecha').value = `${yyyy}-${mm}-${dd}`;
-  }
+  function limpiarFormulario(){ $('frm').reset(); clearSignature(); }
 
-  // ============== Firma (canvas) ==============
-  const sig = { canvas:null, ctx:null, drawing:false, hasStroke:false, scale:1 };
+  // ============== Firma (canvas) con preservación al redimensionar ==============
+  const sig = { canvas:null, ctx:null, drawing:false, hasStroke:false, scale:1, _rz:null };
   function initSignature(){
     sig.canvas = $('sigCanvas');
     sig.ctx = sig.canvas.getContext('2d');
-    resizeSignatureCanvas(); // scale to DPR
+    resizeSignatureCanvas({ preserve:false }); // init
     sig.ctx.lineWidth = 2;
     sig.ctx.lineCap = 'round';
     sig.ctx.strokeStyle = '#111827';
 
+    // Mejor soporte táctil
     const pos = e => {
       const rect = sig.canvas.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      const clientX = e.touches ? e.touches[0].clientX : (e.clientX ?? e.pageX);
+      const clientY = e.touches ? e.touches[0].clientY : (e.clientY ?? e.pageY);
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
       return { x: x * sig.scale, y: y * sig.scale };
     };
 
@@ -413,18 +367,31 @@
     const move  = e => { if(!sig.drawing) return; const p = pos(e); sig.ctx.lineTo(p.x, p.y); sig.ctx.stroke(); sig.hasStroke = true; };
     const end   = e => { if(!sig.drawing) return; sig.drawing = false; };
 
+    // Mouse
     sig.canvas.addEventListener('mousedown', start);
     sig.canvas.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);
-
+    // Touch
     sig.canvas.addEventListener('touchstart', start, {passive:false});
     sig.canvas.addEventListener('touchmove', move, {passive:false});
     window.addEventListener('touchend', end);
 
     $('btnClearSig').addEventListener('click', clearSignature);
-    window.addEventListener('resize', resizeSignatureCanvas);
+
+    // Preservar la firma ante cambios de viewport (scroll en móvil / barra del navegador / rotación)
+    const debounced = () => {
+      clearTimeout(sig._rz);
+      sig._rz = setTimeout(() => resizeSignatureCanvas({ preserve:true }), 120);
+    };
+    window.addEventListener('resize', debounced);
+    window.addEventListener('orientationchange', () => setTimeout(() => resizeSignatureCanvas({ preserve:true }), 250));
   }
-  function resizeSignatureCanvas(){
+  function resizeSignatureCanvas({ preserve } = { preserve:false }){
+    let data = null, had = false;
+    if (preserve && sig.canvas) { // capturar estado actual
+      data = sig.canvas.toDataURL('image/png');
+      had = sig.hasStroke;
+    }
     const dpr = window.devicePixelRatio || 1;
     const cssW = sig.canvas.clientWidth;
     const cssH = sig.canvas.clientHeight || 200;
@@ -432,8 +399,18 @@
     sig.canvas.height = Math.floor(cssH * dpr);
     sig.scale = dpr;
     // fondo blanco
-    sig.ctx && (sig.ctx.fillStyle = '#ffffff', sig.ctx.fillRect(0,0,sig.canvas.width,sig.canvas.height));
-    sig.hasStroke = false;
+    sig.ctx.fillStyle = '#ffffff'; sig.ctx.fillRect(0,0,sig.canvas.width,sig.canvas.height);
+
+    if (data){
+      const img = new Image();
+      img.onload = () => {
+        sig.ctx.drawImage(img, 0, 0, sig.canvas.width, sig.canvas.height);
+        sig.hasStroke = had;
+      };
+      img.src = data;
+    }else{
+      sig.hasStroke = false;
+    }
   }
   function clearSignature(){
     if (!sig.ctx) return;
@@ -513,6 +490,7 @@
       ['CBU / Alias', vals.cbu],
       ['Banco donde se paga', vals.bancoPago],
       ['Tipo de Factura', vals.fact],
+      ['Condición fiscal', vals.condicion],
       ['Modalidad de trabajo', vals.modalidades],
       ['Radio de cobertura (km)', vals.radioKm],
       ['Días disponibles', vals.diasDisponibles],
@@ -573,7 +551,8 @@
       `Email: ${vals.email} | Tel: ${vals.tel}`,
       `Ciudad/Provincia: ${vals.ciudad}`,
       `CBU/Alias: ${vals.cbu} | Banco donde se paga: ${vals.bancoPago}`,
-      `Facturación: ${vals.fact} (Recordatorio: se solicita Factura A)`,
+      `Tipo de factura: ${vals.fact} (Recordatorio: se solicita Factura A)`,
+      `Condición fiscal: ${vals.condicion}`,
       `Modalidad de trabajo: ${vals.modalidades}`,
       `Cobertura: Radio ${vals.radioKm} km`,
       `Días disponibles: ${vals.diasDisponibles}`,
